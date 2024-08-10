@@ -232,7 +232,7 @@ function OneOneChat() {
   };
 
   const client = new W3CWebSocket(
-    `ws://taskbridge.duckdns.org/ws/chat/${sender}_${receiver}/`
+    `wss://taskbridge.duckdns.org/ws/chat/${sender}_${receiver}/`
   );
 
   useEffect(() => {
