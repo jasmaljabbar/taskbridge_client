@@ -4,8 +4,8 @@ import axios from 'axios';
 
 // export const API = 'http://127.0.0.1:8000/account/';
 
-export const BASE_URL = 'http://127.0.0.1:8000/'
-export const B_URL = 'http://127.0.0.1:8000'
+export const BASE_URL = 'https://taskbridge.duckdns.org/'
+export const B_URL = 'https://taskbridge.duckdns.org'
 
 // export const API_URL_PROFIL = 'http://127.0.0.1:8000/profiles/'
 
