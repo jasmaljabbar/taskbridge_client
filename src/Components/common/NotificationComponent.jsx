@@ -10,7 +10,7 @@ function NotificationComponent({ senderId, receiverId, message }) {
     if (senderId && receiverId) {
       console.log("Setting up WebSocket with:", senderId, receiverId);
       const newClient = new W3CWebSocket(
-        `ws://127.0.0.1:8000/ws/notifications/${senderId}/${receiverId}/`
+        `ws://taskbridge.duckdns.org/ws/notifications/${senderId}/${receiverId}/`
       );
 
 
