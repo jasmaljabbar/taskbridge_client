@@ -14,6 +14,8 @@ import { useParams } from "react-router-dom";
 import { B_URL, BASE_URL } from "../../../../redux/actions/authService";
 import Unknown from "../../../../statics/user_side/Unknown.jpg";
 import axios from "axios";
+import ImageUpload from "../../../common/ImageUpload"
+
 
 function OneOneChat() {
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ function OneOneChat() {
   const [users_taskerside, setUser_tasekerside] = useState(null);
   const [employee, setEmployee] = useState([]);
   const [message, setMessage] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImage_url, setSelectedImage_url] = useState(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
   const location = useLocation();
@@ -35,6 +37,8 @@ function OneOneChat() {
   const lastMessageRef = useRef(null);
   const { id } = useParams();
 
+
+
   const currentUsers = localStorage.getItem("userDetails");
   const Employee = JSON.parse(currentUsers);
   let employeeId;
@@ -42,19 +46,19 @@ function OneOneChat() {
   let sender;
   let receiver;
   let currentUser;
-  let currentrole;
+  
   if (user_info) {
     if (user_info.is_staff === false) {
       employeeId = taskerInfo.user.id;
       userId = user_info.user_id;
-      sender = user_info.user_id;
-      receiver = taskerInfo.user.id;
-      currentUser = user_info.user_id;
+      sender = parseInt(user_info.user_id);
+      receiver = parseInt(taskerInfo.user.id);
+      currentUser = parseInt(user_info.user_id);
     } else if (user_info.is_staff === true) {
-      userId = id;
-      employeeId = user_info.user_id;
+      userId = parseInt(id);
+      employeeId = parseInt(user_info.user_id);
       sender = employeeId;
-      receiver = id;
+      receiver = userId;
       currentUser = employeeId;
     }
   } else {
@@ -153,44 +157,31 @@ function OneOneChat() {
     }
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setSelectedImage(file);
-
-      // Create a preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviewUrl(reader.result);
-      };
-      reader.readAsDataURL(file);
-
-      console.log("Selected file:", file);
+      const imageUrl = await ImageUpload(file);
+      setSelectedImage_url(imageUrl);
+      setImagePreviewUrl(URL.createObjectURL(file));
     }
   };
 
   const handleMessage = async (e) => {
     e.preventDefault();
-    if (!message.trim() && !selectedImage) {
+    if (!message.trim() && !selectedImage_url) {
       toast.error("Cannot be empty");
       return false;
     }
-
+  
     try {
       const formData = new FormData();
       formData.append("message", message);
-      if (selectedImage) {
-        formData.append("image", selectedImage);
+      if (selectedImage_url) {
+        formData.append("image_url", selectedImage_url);
       }
-      formData.append("sender", sender);
-      formData.append("receiver", receiver);
-
-      console.log("Sending request to:", `${BASE_URL}api/chat/send_message/`);
-      console.log("FormData contents:");
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
+      formData.append("sender", sender.toString());  
+    formData.append("receiver", receiver.toString()); 
+  
       const response = await axiosInstance.post(
         `${BASE_URL}api/chat/send_message/`,
         formData,
@@ -201,32 +192,25 @@ function OneOneChat() {
           },
         }
       );
-
-      console.log("Response:", response.data);
-
-      // Handle successful message send
+  
       const newMessage = response.data;
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setMessage("");
-      setSelectedImage(null);
+      setSelectedImage_url(null);
       setImagePreviewUrl(null);
       setEmoji(false);
-
+  
       // Send WebSocket message
       if (client.readyState === W3CWebSocket.OPEN) {
-        client.send(JSON.stringify(newMessage));
+        client.send(JSON.stringify({
+          message: newMessage.message,
+          image_url: selectedImage_url,
+          sender: { id: sender },
+          receiver: { id: receiver }
+        }));
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-        console.error("Response headers:", error.response.headers);
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-      } else {
-        console.error("Error setting up request:", error.message);
-      }
       toast.error("Failed to send message");
     }
   };
@@ -301,45 +285,31 @@ function OneOneChat() {
     client.onmessage = (event) => {
       try {
         const dataFromServer = JSON.parse(event.data);
-
-        if (
-          dataFromServer &&
-          (dataFromServer.message || dataFromServer.image)
-        ) {
+        if (dataFromServer && dataFromServer.messages) {
+          setMessages(dataFromServer.messages);
+        } else if (dataFromServer && (dataFromServer.message || dataFromServer.image_url)) {
           const newMessage = {
             id: dataFromServer.id || Date.now(),
             message: dataFromServer.message,
-            image: dataFromServer.image,
-            sender: dataFromServer.sender
-              ? { id: dataFromServer.sender.id }
-              : {},
-            receiver: dataFromServer.receiver
-              ? { id: dataFromServer.receiver.id }
-              : {},
+            image_url: dataFromServer.image_url,
+            sender: dataFromServer.sender ? { id: dataFromServer.sender.id } : {},
+            receiver: dataFromServer.receiver ? { id: dataFromServer.receiver.id } : {},
             date: dataFromServer.date || new Date().toISOString(),
             is_read: dataFromServer.is_read || false,
           };
-
-          console.log("Processed new message:", newMessage);
-
+  
           setMessages((prevMessages) => {
             if (!prevMessages.some((msg) => msg.id === newMessage.id)) {
               if (newMessage.sender.id !== currentUser) {
                 markMessageAsRead(newMessage.id);
-                return [...prevMessages, newMessage];
               }
+              return [...prevMessages, newMessage];
             }
             return prevMessages;
           });
-        } else {
-          console.warn(
-            "Received WebSocket data in unexpected format:",
-            dataFromServer
-          );
         }
       } catch (error) {
         console.error("Error processing WebSocket message:", error);
-        console.error("Raw data that caused the error:", event.data);
       }
     };
   }, [currentUser]);
@@ -409,13 +379,11 @@ function OneOneChat() {
                             } py-2 px-4 shadow rounded-xl`}
                           >
                             {message.message && (
-                              <div className="w-35 truncate">
-                                {message.message}
-                              </div>
+                              <div className="w-35 truncate">{message.message}</div>
                             )}
-                            {message.image && (
+                            {message.image_url && (
                               <img
-                                src={`${B_URL}${message.image}`}
+                                src={message.image_url}
                                 alt="Sent image"
                                 className="max-w-xs max-h-64 object-contain mt-2"
                               />
@@ -516,7 +484,7 @@ function OneOneChat() {
                         />
                         <button
                           onClick={() => {
-                            setSelectedImage(null);
+                            setSelectedImage_url(null);
                             setImagePreviewUrl(null);
                           }}
                           className="text-red-500 ml-2"

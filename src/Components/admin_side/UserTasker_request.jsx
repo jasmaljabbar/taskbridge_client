@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Unknown from "../../statics/user_side/Unknown.jpg";
 import { useSelector } from "react-redux";
 import { B_URL, BASE_URL } from "../../redux/actions/authService";
+import toast from "react-hot-toast";
 import Confirm_without_msg from "../common/Confirm_without_msg";
 import TaskerProfile from "./TaskerProfile ";
 
-function UserList() {
+const UserTasker_request = () => {
   const [usersInfo, setUsersInfo] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [currentTaskerId, setCurrentTaskerId] = useState(null);
@@ -15,9 +17,35 @@ function UserList() {
   const [confirmAction, setConfirmAction] = useState(() => {});
   const [selectedTasker, setSelectedTasker] = useState(null);
   const accessToken = useSelector((state) => state.auth.token);
+  const navigate = useNavigate();
 
+  const handleRequest = async () => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}adminside/accepting_request/`,
+        { id: currentTaskerId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      console.log(response.data);
+      toast.success("Requested successfully");
+      setUsersInfo((prevUsersInfo) =>
+        prevUsersInfo.map((user) =>
+          user.id === currentTaskerId
+            ? { ...user, requested_to_tasker: false }
+            : user
+        )
+      );
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
-  
   const handleUserAction = async () => {
     try {
       const response = await axios.post(
@@ -59,11 +87,14 @@ function UserList() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}adminside/dashboard/`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await axios.get(
+          `${BASE_URL}adminside/tasker_request/`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
         setUsersInfo(response.data);
         console.log("Fetched users:", response.data);
       } catch (error) {
@@ -118,7 +149,7 @@ function UserList() {
                   Role
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  Status
+                  Action
                 </th>
               </tr>
             </thead>
@@ -165,42 +196,24 @@ function UserList() {
                     <td className="px-6 py-4">
                       <div>{item.is_staff ? <p>Tasker</p> : <p>User</p>}</div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div>
-                          {item.is_active ? (
-                            <button
-                              className="bg-blue-500 text-white md:px-4 md:py-2 px-2 py-0.5 text-[12px] md:text-md font-semibold rounded-lg hover:bg-red-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentTaskerId(item.id);
-                                handleModal(
-                                  item.id,
-                                  "Are you sure you want to deactivate this user?",
-                                  handleUserAction
-                                );
-                              }}
-                            >
-                              Active
-                            </button>
-                          ) : (
-                            <button
-                              className="bg-orange-500 text-white md:px-4 md:py-2 px-2 py-0.5 text-[12px] md:text-md font-semibold rounded-lg hover:bg-green-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentTaskerId(item.id);
-                                handleModal(
-                                  item.id,
-                                  "Are you sure you want to activate this user?",
-                                  handleUserAction
-                                );
-                              }}
-                            >
-                              Inactive
-                            </button>
-                          )}
-                        </div>
-                      </div>
+
+                    <td className="px-6 py-4 flex flex-row">
+                      {item.requested_to_tasker ? (
+                        <button
+                          className="bg-blue-500 text-white md:px-4 md:py-2 px-2 py-0.5 text-[12px] md:text-md font-semibold rounded-lg hover:bg-green-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentTaskerId(item.id);
+                            handleModal(
+                              item.id,
+                              "Are you sure you want to confirm this request?",
+                              handleRequest
+                            );
+                          }}
+                        >
+                          TaskerRequest
+                        </button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
@@ -210,6 +223,6 @@ function UserList() {
       )}
     </div>
   );
-}
+};
 
-export default UserList;
+export default UserTasker_request;

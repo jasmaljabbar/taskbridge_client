@@ -43,6 +43,9 @@ const Admin_Sidebar = () => {
             <NavLink to="/admin/user_list" icon={FaUsers}>
               Users
             </NavLink>
+            <NavLink to="/admin/userTasker_request" icon={FaUsers}>
+              Request
+            </NavLink>
             <NavLink to="/admin/task_list" icon={FaUser}>
               Task Category
             </NavLink>
