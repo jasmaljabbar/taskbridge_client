@@ -20,6 +20,9 @@ const UserTasker_request = () => {
   const navigate = useNavigate();
 
   const handleRequest = async () => {
+    if (!currentTaskerId) {
+      return;
+    }
     try {
       const response = await axios.post(
         `${BASE_URL}adminside/accepting_request/`,
@@ -107,10 +110,10 @@ const UserTasker_request = () => {
     }
   }, [accessToken]);
 
-  if (!usersInfo) {
+  if (usersInfo.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-600">No requests found</p>
       </div>
     );
   }
@@ -134,7 +137,7 @@ const UserTasker_request = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center h-screen w-full mt-24 ms-40 p-6">
-          <h1 className="text-purple-950 p-10 text-4xl font-bold">Users</h1>
+          <h1 className="text-purple-950 p-10 text-4xl font-bold">Requests to become a Tasker</h1>
 
           <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 ml-6">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -211,7 +214,7 @@ const UserTasker_request = () => {
                             );
                           }}
                         >
-                          TaskerRequest
+                          AcceptRequest
                         </button>
                       ) : null}
                     </td>
