@@ -13,6 +13,7 @@ function Tasker_Listing() {
   const [usersInfo, setUsersInfo] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [currentTaskerId, setCurrentTaskerId] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [openTasker, setOpenTasker] = useState(false);
   const [selectedTasker, setSelectedTasker] = useState(null);
 
@@ -65,6 +66,7 @@ function Tasker_Listing() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true)
       try {
         const response = await axios.get(
           `${BASE_URL}adminside/tasker_listing/`,
@@ -75,8 +77,10 @@ function Tasker_Listing() {
           }
         );
         setUsersInfo(response.data);
+        setLoading(false)
       } catch (error) {
         alert(error.message);
+        setLoading(false)
       }
     };
 
@@ -85,10 +89,17 @@ function Tasker_Listing() {
     }
   }, [accessToken]);
 
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+
   if (!usersInfo) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-600">No Taskers found</p>
       </div>
     );
   }

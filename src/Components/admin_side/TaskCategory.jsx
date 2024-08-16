@@ -23,6 +23,7 @@ const categorySchema = Yup.object().shape({
 const TaskCategory = () => {
   const [taskInfo, setTaskInfo] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const accessToken = useSelector((state) => state.auth.token);
   const navigate = useNavigate();
 
@@ -87,6 +88,7 @@ const TaskCategory = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true)
       try {
         const response = await axios.get(`${BASE_URL}adminside/workcategory/`, {
           headers: {
@@ -94,8 +96,10 @@ const TaskCategory = () => {
           },
         });
         setTaskInfo(response.data);
+        setLoading(false)
       } catch (error) {
         toast.alert(error.message);
+        setLoading(false)
       }
     };
 
@@ -104,10 +108,17 @@ const TaskCategory = () => {
     }
   }, [accessToken]);
 
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+
   if (!taskInfo) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-600">No Tasks found</p>
       </div>
     );
   }

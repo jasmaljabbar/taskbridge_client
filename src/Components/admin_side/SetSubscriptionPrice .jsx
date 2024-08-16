@@ -8,10 +8,12 @@ function SetSubscriptionPrice() {
   const [subscriptionType, setSubscriptionType] = useState("");
   const [price, setPrice] = useState("");
   const [options, setOptions] = useState({});
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const accessToken = useSelector((state) => state.auth.token);
 
   const fetchData = async () => {
+    setLoading(true)
     try {
       const response = await axios.get(
         `${BASE_URL}task_workers/payment/options/`,
@@ -22,8 +24,10 @@ function SetSubscriptionPrice() {
         }
       );
       setOptions(response.data);
+      setLoading(false)
     } catch (error) {
       alert(error.message);
+      setLoading(false)
     }
   };
 
@@ -64,6 +68,13 @@ function SetSubscriptionPrice() {
   useEffect(() => {
     fetchData();
   }, [accessToken]);
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
 
   return (
     <div className="flex flex-col pt-[8%] items-center justify-center min-h-screen ">

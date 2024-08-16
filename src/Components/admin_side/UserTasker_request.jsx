@@ -16,6 +16,7 @@ const UserTasker_request = () => {
   const [openTasker, setOpenTasker] = useState(false);
   const [confirmAction, setConfirmAction] = useState(() => {});
   const [selectedTasker, setSelectedTasker] = useState(null);
+  const [loading, setLoading] = useState(false);
   const accessToken = useSelector((state) => state.auth.token);
   const navigate = useNavigate();
 
@@ -89,6 +90,7 @@ const UserTasker_request = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true)
       try {
         const response = await axios.get(
           `${BASE_URL}adminside/tasker_request/`,
@@ -99,9 +101,11 @@ const UserTasker_request = () => {
           }
         );
         setUsersInfo(response.data);
+        setLoading(false)
         console.log("Fetched users:", response.data);
       } catch (error) {
         alert(error.message);
+        setLoading(false)
       }
     };
 
@@ -109,6 +113,13 @@ const UserTasker_request = () => {
       fetchData();
     }
   }, [accessToken]);
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
 
   if (usersInfo.length === 0) {
     return (
