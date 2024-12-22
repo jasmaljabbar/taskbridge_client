@@ -216,7 +216,7 @@ function OneOneChat() {
   };
 
   const client = new W3CWebSocket(
-    `wss://taskbridge.duckdns.org/ws/chat/${sender}_${receiver}/`
+    `wss:////taskbridge-server.onrender.com/ws/chat/${sender}_${receiver}/`
   );
 
   useEffect(() => {
