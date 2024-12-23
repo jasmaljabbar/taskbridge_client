@@ -156,7 +156,7 @@ const UserProfile = () => {
           <div className="flex items-center">
             {profile_data.profile_photo ? (
               <img
-                src={imagePreview || profile_data.profile_photo || Unknown}
+                src={profile_data.profile_photo}
                 alt="Profile"
                 className="w-10 h-10 rounded-full"
               />
