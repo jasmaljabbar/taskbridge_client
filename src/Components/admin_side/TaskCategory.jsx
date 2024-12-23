@@ -11,13 +11,19 @@ import { MdBlock } from "react-icons/md";
 import toast from "react-hot-toast";
 import Modal from "./Modal"; // Import the new Modal component
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import ImageUpload from "../common/ImageUpload";
 import * as Yup from "yup";
 
 // Define the Yup validation schema
 const categorySchema = Yup.object().shape({
   name: Yup.string().required("Category name is required"),
   description: Yup.string().required("Description is required"),
-  work_image: Yup.mixed().nullable(),
+  work_image: Yup.mixed()
+    .test("fileType", "Only JPG and PNG images allowed", (value) => {
+      if (!value) return true;
+      return ["image/jpeg", "image/jpg", "image/png"].includes(value.type);
+    })
+    .nullable()
 });
 
 const TaskCategory = () => {
@@ -58,33 +64,44 @@ const TaskCategory = () => {
   };
 
   const handleAddCategory = async (values, { setSubmitting, resetForm }) => {
-    const formData = new FormData();
-    formData.append("name", values.name);
-    formData.append("description", values.description);
-    if (values.work_image) {
-      formData.append("work_image", values.work_image);
-    }
-
     try {
+      let imageUrl = null;
+      if (values.work_image) {
+        imageUrl = await ImageUpload(values.work_image);
+    
+        
+        if (!imageUrl) return;
+      }
+  
+      const formData = new FormData();
+      formData.append('name', values.name);
+      formData.append('description', values.description);
+      formData.append('work_image', imageUrl);
+  
       const response = await axios.post(
         `${BASE_URL}adminside/add_workcategory/`,
         formData,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "multipart/form-data",
-          },
+          }
         }
       );
-      setTaskInfo([...taskInfo, response.data]);
-      resetForm();
-      setIsModalOpen(false);
+      
+      if (response.data) {
+        setTaskInfo(prev => [...prev, response.data]);
+        resetForm();
+        setIsModalOpen(false);
+        toast.success("Category added successfully");
+      }
     } catch (error) {
-      toast.error(error.message);
+      console.error('API error:', error.response || error);
+      toast.error(error.response?.data?.detail || "Failed to add category");
     } finally {
       setSubmitting(false);
     }
   };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,7 +115,7 @@ const TaskCategory = () => {
         setTaskInfo(response.data);
         setLoading(false)
       } catch (error) {
-        toast.alert(error.message);
+        toast.alert("error.message");
         setLoading(false)
       }
     };
@@ -225,22 +242,13 @@ const TaskCategory = () => {
                   className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                   <td className="w-4 p-4">
-                    {item.work_image ? (
-                      <img
-                        className="w-10 h-10 rounded-full"
-                        src={`${B_URL}${item.work_image}`}
-                        alt="work image"
-                        onError={(e) => (e.target.src = Unknown)} // Fallback to Unknown image if there's an error
-                      />
-                    ) : (
-                      <img
-                        className="w-10 h-10 rounded-full"
-                        src={Unknown}
-                        alt="unknown work image"
-                      />
-                    )}
+                    <img
+                      className="w-10 h-10 rounded-full"
+                      src={item.work_image || Unknown}
+                      alt="work image"
+                      onError={(e) => (e.target.src = Unknown)}
+                    />
                   </td>
-
                   <td
                     scope="row"
                     className="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white"

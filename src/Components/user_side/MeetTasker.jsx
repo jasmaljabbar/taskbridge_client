@@ -9,6 +9,8 @@ import { B_URL } from "../../redux/actions/authService";
 
 const MeetTasker = () => {
   const taskerInfo = useSelector((state) => state.auth.taskerDetails);
+  console.log(taskerInfo);
+  
   const [isOpen, setIsOpen] = useState(false);
   const user_profile = useSelector((state) => state.auth.token);
   const [user_in, setUser_in] = useState({
@@ -52,7 +54,7 @@ const MeetTasker = () => {
         <img
           src={
             taskerInfo.work_photo
-              ? `${B_URL}${taskerInfo.work_photo}`
+              ? `${taskerInfo.work_photo}`
               : "fallback_image_url"
           }
           alt="Tasker Work"

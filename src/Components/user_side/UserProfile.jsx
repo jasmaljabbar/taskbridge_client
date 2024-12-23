@@ -76,7 +76,7 @@ const UserProfile = () => {
     } catch (error) {
       console.error("Error uploading image:", error);
     }
-  }; // Added missing closing brace
+  };
 
   const handleSave = async (values) => {
     setLoading(true);
@@ -86,29 +86,19 @@ const UserProfile = () => {
       return;
     }
   
-    const updatedProfile = {
-      username: values.full_name,
-      email: values.email,
-      phone_number: values.phone_number,
-      address: values.address,
-      city: values.city,
-      gender: values.gender,
-      profile_photo: values.profile_photo, // This will be the Cloudinary URL
-    };
-  
     try {
       const formDataToSend = new FormData();
-      for (const key in values) {
-        if (key === "profile_photo") {
-          if (values[key] !== null) {
-            formDataToSend.append(key, values[key]);
-          }
-        } else {
-          formDataToSend.append(key, values[key]);
-        }
+      formDataToSend.append("username", values.full_name);
+      formDataToSend.append("email", values.email);
+      formDataToSend.append("phone_number", values.phone_number);
+      formDataToSend.append("address", values.address);
+      formDataToSend.append("city", values.city);
+      formDataToSend.append("gender", values.gender);
+      if (values.profile_photo) {
+        formDataToSend.append("profile_photo", values.profile_photo);
       }
   
-      await axios.put(
+      const response = await axios.put(
         `${BASE_URL}profiles/update/`,
         formDataToSend,
         {
@@ -118,25 +108,18 @@ const UserProfile = () => {
           },
         }
       );
-      const updatedProfile = {
-        ...profile_data,
-        username: values.full_name,
-        email: values.email,
-        phone_number: values.phone_number,
-        address: values.address,
-        city: values.city,
-        gender: values.gender,
-        profile_photo:
-          values.profile_photo instanceof File
-            ? URL.createObjectURL(values.profile_photo)
-            : profile_data.profile_photo,
-      };
-      setProfile_data(updatedProfile);
-      dispatch(fetchUserProfile(accessToken));
+  
+      if (response.data) {
+        setProfile_data(response.data);
+        const userProfile = await dispatch(fetchUserProfile(accessToken));
+        if (userProfile.payload?.profile) {
+          setProfile_data(userProfile.payload.profile);
+        }
+      }
       setEditing(false);
-      setLoading(false);
     } catch (error) {
       console.error("Error saving profile:", error);
+    } finally {
       setLoading(false);
     }
   };

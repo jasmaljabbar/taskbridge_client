@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { BASE_URL } from "../../redux/actions/authService";
 import toast from "react-hot-toast";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import ImageUpload from "../common/ImageUpload";
 import * as Yup from "yup";
 
 const validationSchema = Yup.object().shape({
