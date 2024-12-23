@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchUserProfile } from "../../redux/reducers/authSlice";
 import { BASE_URL } from "../../redux/actions/authService";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import ImageUpload from "../common/ImageUpload";
 import * as Yup from "yup";
 
 const validationSchema = Yup.object().shape({
@@ -30,6 +31,7 @@ const UserProfile = () => {
   const [profile_data, setProfile_data] = useState([]);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -37,7 +39,7 @@ const UserProfile = () => {
     address: "",
     city: "",
     gender: "",
-    profile_photo: null,
+    profile_photo: "",
   });
 
   useEffect(() => {
@@ -66,6 +68,16 @@ const UserProfile = () => {
     }
   }, [profile_data]);
 
+  const handleImageUpload = async (file, setFieldValue) => {
+    try {
+      const imageUrl = await ImageUpload(file);
+      setFieldValue("profile_photo", imageUrl);
+      setImagePreview(imageUrl);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    };
+
+
   const handleSave = async (values) => {
     setLoading(true);
     if (!accessToken) {
@@ -73,6 +85,39 @@ const UserProfile = () => {
       setLoading(false);
       return;
     }
+
+    const updatedProfile = {
+      username: values.full_name,
+      email: values.email,
+      phone_number: values.phone_number,
+      address: values.address,
+      city: values.city,
+      gender: values.gender,
+      profile_photo: values.profile_photo, // This will be the Cloudinary URL
+    };
+
+    try {
+      await axios.put(
+        `${BASE_URL}profiles/update/`,
+        updatedProfile,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      
+      setProfile_data(updatedProfile);
+      dispatch(fetchUserProfile(accessToken));
+      setEditing(false);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      setLoading(false);
+    }
+  };
+
 
     const formDataToSend = new FormData();
     for (const key in values) {
@@ -139,7 +184,7 @@ const UserProfile = () => {
               />
             ) : (
               <img
-                src={Unknown}
+                src={profile_data.profile_photo || Unknown}
                 alt="Profile"
                 className="w-10 h-10 rounded-full"
               />
@@ -233,13 +278,23 @@ const UserProfile = () => {
                     <label className="block text-sm font-medium text-gray-700">
                       Profile Photo
                     </label>
+                    <div className="mt-2 flex items-center space-x-4">
+                    <img
+                      src={imagePreview || profile_data.profile_photo || Unknown}
+                      alt="Profile Preview"
+                      className="w-20 h-20 rounded-full object-cover"
+                    />
                     <input
                       type="file"
+                      accept="image/*"
                       onChange={(event) => {
-                        setFieldValue("profile_photo", event.currentTarget.files[0]);
+                        if (event.currentTarget.files?.[0]) {
+                          handleImageUpload(event.currentTarget.files[0], setFieldValue);
+                        }
                       }}
                       className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
                     />
+                  </div>
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end space-x-4">
