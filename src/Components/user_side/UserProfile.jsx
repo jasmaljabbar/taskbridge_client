@@ -75,8 +75,8 @@ const UserProfile = () => {
       setImagePreview(imageUrl);
     } catch (error) {
       console.error("Error uploading image:", error);
-    };
-
+    }
+  }; // Added missing closing brace
 
   const handleSave = async (values) => {
     setLoading(true);
@@ -85,7 +85,7 @@ const UserProfile = () => {
       setLoading(false);
       return;
     }
-
+  
     const updatedProfile = {
       username: values.full_name,
       email: values.email,
@@ -95,42 +95,19 @@ const UserProfile = () => {
       gender: values.gender,
       profile_photo: values.profile_photo, // This will be the Cloudinary URL
     };
-
+  
     try {
-      await axios.put(
-        `${BASE_URL}profiles/update/`,
-        updatedProfile,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      
-      setProfile_data(updatedProfile);
-      dispatch(fetchUserProfile(accessToken));
-      setEditing(false);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error saving profile:", error);
-      setLoading(false);
-    }
-  };
-
-
-    const formDataToSend = new FormData();
-    for (const key in values) {
-      if (key === "profile_photo") {
-        if (values[key] !== null) {
+      const formDataToSend = new FormData();
+      for (const key in values) {
+        if (key === "profile_photo") {
+          if (values[key] !== null) {
+            formDataToSend.append(key, values[key]);
+          }
+        } else {
           formDataToSend.append(key, values[key]);
         }
-      } else {
-        formDataToSend.append(key, values[key]);
       }
-    }
-
-    try {
+  
       await axios.put(
         `${BASE_URL}profiles/update/`,
         formDataToSend,
@@ -163,6 +140,7 @@ const UserProfile = () => {
       setLoading(false);
     }
   };
+  
 
   if (loading)
     return (
