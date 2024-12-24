@@ -79,7 +79,7 @@ const Work_category = () => {
             >
               <div className="flex justify-center">
                 <img
-                  src={`${B_URL}${item.work_image}`}
+                  src={`${item.work_image}`}
                   alt={item.alt}
                   className={`shadow rounded-full max-w-full h-auto align-middle border-none transition-transform transform hover:scale-105 ${item.className}`}
                   style={{
