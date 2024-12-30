@@ -10,6 +10,7 @@ import axios from "axios";
 import Unknown from "../../statics/user_side/Unknown.jpg";
 import TaskShow from "./TaskShow/TaskShow";
 import { BASE_URL } from "../../redux/actions/authService";
+import ImageUpload from "../common/ImageUpload";
 
 const TaskerProfile = () => {
   const dispatch = useDispatch();
@@ -21,6 +22,7 @@ const TaskerProfile = () => {
   const [userData, setUserData] = useState(null);
   const [workCategories, setWorkCategories] = useState([]);
   const [error, setError] = useState("");
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -85,69 +87,70 @@ const TaskerProfile = () => {
     task_fee: Yup.number()
       .typeError("Service charge must be a number")
       .required("Service charge is required"),
-    work_photo: Yup.mixed(),
+    work_photo: Yup.string().nullable(),
   });
+
+  const handleImageUpload = async (file, setFieldValue) => {
+    try {
+      const imageUrl = await ImageUpload(file);
+      setFieldValue("work_photo", imageUrl);
+      setUploadedImageUrl(imageUrl);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    }
+  };
+
 
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     setIsLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("full_name", values.full_name);
-      formData.append("phone_number", values.phone_number);
-      formData.append("aadhar_number", values.aadhar_number);
-      formData.append("address", values.address);
-      formData.append("city", values.city);
-      formData.append("state", values.state);
-
-      Object.keys(values).forEach((key) => {
-        if (values[key] !== taskerData[key]) {
-          if (key === "task" && values[key]) {
-            formData.append("task", values[key].value);
-          } else if (key === "work_photo") {
-            if (values[key] instanceof File) {
-              formData.append("work_photo", values[key]);
-            }
-          } else {
-            formData.append(key, values[key]);
-          }
-        }
-      });
-
-      if (values.work_photo instanceof File) {
-        formData.append("work_photo", values.work_photo);
-      }
-      formData.append("task", values.task.value);
-      formData.append("task_fee", values.task_fee);
-
+      const requestBody = {
+        full_name: values.full_name,
+        phone_number: values.phone_number,
+        aadhar_number: values.aadhar_number,
+        address: values.address,
+        city: values.city,
+        state: values.state,
+        task: values.task?.value || values.task,
+        task_fee: values.task_fee,
+        work_photo: values.work_photo || uploadedImageUrl,
+      };
+  
+      console.log("Request Body:", requestBody); // Debugging log
+  
       const response = await axios.put(
         `${BASE_URL}task_workers/update/`,
-        formData,
+        requestBody,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
           },
         }
       );
-
-
+  
+      console.log("API Response:", response.data); // Debugging log
+  
       setTaskerData((prevData) => ({
         ...prevData,
         ...response.data,
       }));
-
+  
       fetchData();
       setIsLoading(false);
       setEditing(false);
       dispatch(fetchTaskerProfile(accessToken));
       resetForm();
     } catch (error) {
-      console.error("Error saving profile:", error);
-      setError("Failed to save profile. Please try again.");
+      console.error("Error saving profile:", error.response?.data || error.message);
+      const errorMessage =
+        error.response?.data?.message || "Failed to save profile. Please try again.";
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
   };
+  
 
   if (!taskerData || !userData) {
     return <div className="flex justify-center items-center h-64">
@@ -196,7 +199,7 @@ const TaskerProfile = () => {
                     }
                   : null,
                 task_fee: taskerData.task_fee || "",
-                work_photo: taskerData.work_photo || null,
+                work_photo: taskerData.work_photo || "",
               }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
@@ -313,18 +316,26 @@ const TaskerProfile = () => {
                   </div>
                   <div className="col-span-1 md:col-span-2">
                     <label className="mb-1 block">Work Photo</label>
-                    <input
-                      id="work_photo"
-                      name="work_photo"
-                      type="file"
-                      className="border rounded-md border-black p-3 w-full"
-                      onChange={(event) => {
-                        setFieldValue(
-                          "work_photo",
-                          event.currentTarget.files[0]
-                        );
-                      }}
-                    />
+                    <div className="space-y-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) => {
+                          if (event.currentTarget.files?.[0]) {
+                            handleImageUpload(event.currentTarget.files[0], setFieldValue);
+                          }
+                        }}
+                      />
+                      {values.work_photo && (
+                        <div className="mt-2">
+                          <img
+                            src={values.work_photo}
+                            alt="Work Preview"
+                            className="w-full max-w-md rounded-md"
+                          />
+                        </div>
+                      )}
+                    </div>
                     <ErrorMessage
                       name="work_photo"
                       component="div"

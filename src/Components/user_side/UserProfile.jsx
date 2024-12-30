@@ -245,14 +245,14 @@ const UserProfile = () => {
                       alt="Profile Preview"
                       className="w-20 h-20 rounded-full object-cover"
                     />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) => {
-                        if (event.currentTarget.files?.[0]) {
-                          handleImageUpload(event.currentTarget.files[0], setFieldValue);
-                        }
-                      }}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) => {
+                          if (event.currentTarget.files?.[0]) {
+                            handleImageUpload(event.currentTarget.files[0], setFieldValue);
+                          }
+                        }}
                       className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
                     />
                   </div>

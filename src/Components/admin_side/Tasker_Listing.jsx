@@ -158,7 +158,7 @@ function Tasker_Listing() {
                         className="w-10 h-10 rounded-full"
                         src={
                           item.profile_pic
-                            ? `${B_URL}${item.profile_pic}`
+                            ? `${item.profile_pic}`
                             : Unknown
                         }
                         alt="profile picture"

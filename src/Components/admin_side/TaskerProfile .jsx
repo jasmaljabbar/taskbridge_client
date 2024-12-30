@@ -91,7 +91,7 @@ const TaskerProfile = ({ tasker, onClose }) => {
             <img
               src={
                 taskerInfo.work_photo
-                  ? `${B_URL}${taskerInfo.work_photo}`
+                  ? `${taskerInfo.work_photo}`
                   : coming_soon
               }
               alt="Work"

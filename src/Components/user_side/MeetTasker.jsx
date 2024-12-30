@@ -65,7 +65,7 @@ const MeetTasker = () => {
             className="w-32 h-32 rounded-full object-cover border-4 border-white"
             src={
               taskerInfo.profile_pic
-                ? `${B_URL}${taskerInfo.profile_pic}`
+                ? `${taskerInfo.profile_pic}`
                 : "fallback_profile_photo_url"
             }
             alt="Tasker"

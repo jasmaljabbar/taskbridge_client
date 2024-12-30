@@ -17,6 +17,7 @@ const BestWorker = () => {
     };
 
     fetchData();
+    
   }, []);
 
   return (
@@ -28,7 +29,7 @@ const BestWorker = () => {
               <img
                 src={
                   item.profile_pic
-                    ? `${B_URL}${item.profile_pic}`
+                    ? `${item.profile_pic}`
                     : "fallback_image_url"
                 }
                 alt={item.full_name}
