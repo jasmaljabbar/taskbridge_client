@@ -181,7 +181,7 @@ const UserTasker_request = () => {
                       {item.profile_pic ? (
                         <img
                           className="w-10 h-10 rounded-full"
-                          src={`${B_URL}${item.profile_pic}`}
+                          src={`${item.profile_pic}`}
                           alt="profile picture"
                         />
                       ) : (
