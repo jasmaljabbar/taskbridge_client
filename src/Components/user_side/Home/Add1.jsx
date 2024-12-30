@@ -70,7 +70,7 @@ const AdSlider = () => {
           key={index}
           title={tasker.task.name}
           description={generateDescription(tasker.task.name)}
-          imgSrc={tasker.profile_pic ? `${B_URL}${tasker.profile_pic}` : Unknown}
+          imgSrc={tasker.profile_pic ? `${tasker.profile_pic}` : Unknown}
         />
         </Link>
       ))}

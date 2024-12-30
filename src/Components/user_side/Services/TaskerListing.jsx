@@ -47,7 +47,7 @@ const TaskerListing = () => {
                 <img
                   src={
                     tasker.work_photo
-                      ? `${B_URL}${tasker.work_photo}`
+                      ? `${tasker.work_photo}`
                       : Image_not_available
                   }
                   alt="Work photo"

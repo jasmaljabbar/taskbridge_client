@@ -79,7 +79,7 @@ const Services = () => {
           key={index}
           imgSrc={
             tasker.profile_pic
-              ? `${B_URL}${tasker.work_photo}`
+              ? `${tasker.work_photo}`
               : Img4
           }
           title={tasker.task.name}
